@@ -18,6 +18,22 @@ const props = defineProps<{
 /** Total column count including the optional no-dep column */
 const totalColumns = computed(() => props.columns.length + (props.showNoDependency ? 1 : 0))
 
+/** Generate package route from header string (e.g. "lodash@4.17.21" or "@vue/reactivity@3.2.0") */
+function packageRouteFromHeader(header: string) {
+  const lastAtIndex = header.lastIndexOf('@')
+
+  // No version or scoped package without version (e.g. "lodash" or "@vue/reactivity")
+  if (lastAtIndex <= 0) {
+    return packageRoute(header, null)
+  }
+
+  // Extract name and version, handling scoped packages like "@org/pkg@1.0.0"
+  const name = header.slice(0, lastAtIndex)
+  const version = header.slice(lastAtIndex + 1)
+
+  return packageRoute(name, version || null)
+}
+
 /** Compute plain-text tooltip for a replacement column */
 function getReplacementTooltip(col: ComparisonGridColumn): string {
   if (!col.replacement) return ''
@@ -45,7 +61,7 @@ function getReplacementTooltip(col: ComparisonGridColumn): string {
         >
           <span class="inline-flex items-center gap-1.5 truncate">
             <NuxtLink
-              :to="packageRoute(col.header)"
+              :to="packageRouteFromHeader(col.header)"
               class="link-subtle font-mono text-sm font-medium text-fg truncate"
               :title="col.header"
             >
